@@ -1,5 +1,6 @@
 import MyFunctor
 import MyMonoid
+import MyApplicativeFunctor
 import MyFoldable
 import Tree1
 import Tree
@@ -90,3 +91,9 @@ example17 = foldMap (Largest . TreeContent) tree3
 example18 = foldLargest tree3
 example19 = foldLargestBy (\x y -> fst y `compare` fst x) tree3
 example20 = foldSmallestBy (\x y -> fst y `compare` fst x) tree3
+
+
+fx :: Int -> Int -> Int -> Int
+fx x y z = 4 * x + 2 * y + z
+
+example21 = fx `funMap` (Just 5) `apply` (Just 5) `apply` (Just 5)

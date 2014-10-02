@@ -34,6 +34,14 @@ instance MyMonoid [a] where
   monoidAppend = (++)
 
 
+-- | The Ordering Monoid.
+instance MyMonoid Ordering where
+  monoidEmpty = EQ
+  LT `monoidAppend` _ = LT
+  EQ `monoidAppend` y = y
+  GT `monoidAppend` _ = GT
+
+
 -- | The Product Monoid.
 instance (MyMonoid a, MyMonoid b) => MyMonoid (a, b) where
   monoidEmpty = (monoidEmpty, monoidEmpty)
