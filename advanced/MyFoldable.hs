@@ -29,42 +29,42 @@ class MyFoldable t where
   -- | Map each element of the structure to a monoid,
   -- and combine the results.
   foldMap :: (MyMonoid m) => (a -> m) -> t a -> m
-  foldMap f = foldr' (monoidAppend . f) monoidEmpty
+  foldMap f = foldRight (monoidAppend . f) monoidEmpty
 
   -- | Right-associative fold of a structure.
   --
   -- @'foldr' f z = 'Prelude.foldr' f z . 'toList'@
-  foldr' :: (a -> b -> b) -> b -> t a -> b
-  foldr' f z t = appMonoidEndo (foldMap (MonoidEndo . f) t) z
+  foldRight :: (a -> b -> b) -> b -> t a -> b
+  foldRight f z t = appMonoidEndo (foldMap (MonoidEndo . f) t) z
 
   -- | Left-associative fold of a structure.
   --
   -- @'foldl' f z = 'Prelude.foldl' f z . 'toList'@
-  foldl' :: (b -> a -> b) -> b -> t a -> b
-  foldl' f z t = appMonoidEndo (getMonoidDual (foldMap (MonoidDual . MonoidEndo . flip f) t)) z
+  foldLeft :: (b -> a -> b) -> b -> t a -> b
+  foldLeft f z t = appMonoidEndo (getMonoidDual (foldMap (MonoidDual . MonoidEndo . flip f) t)) z
 
 instance MyFoldable [] where
-  foldr' = foldr
-  foldl' = foldl
+  foldRight = foldr
+  foldLeft = foldl
 
 instance MyFoldable Maybe where
-  foldr' _ z Nothing = z
-  foldr' f z (Just x) = f x z
+  foldRight _ z Nothing = z
+  foldRight f z (Just x) = f x z
 
-  foldl' _ z Nothing = z
-  foldl' f z (Just x) = f z x
+  foldLeft _ z Nothing = z
+  foldLeft f z (Just x) = f z x
 
 instance MyFoldable (Either a) where
   foldMap _ (Left _) = monoidEmpty
   foldMap f (Right y) = f y
 
-  foldr' _ z (Left _) = z
-  foldr' f z (Right y) = f y z
+  foldRight _ z (Left _) = z
+  foldRight f z (Right y) = f y z
 
 instance MyFoldable ((,) a) where
   foldMap f (_, y) = f y
 
-  foldr' f z (_, y) = f y z
+  foldRight f z (_, y) = f y z
 
 
 foldFindFirst :: (MyFoldable t) => (a -> Bool) -> t a -> Maybe a
@@ -80,7 +80,7 @@ foldFindLast p = getMonoidLast . foldMap (\x -> if p x then MonoidLast (Just x)
 
 -- | List of elements of a structure.
 foldToList :: (MyFoldable t) => t a -> [a]
-foldToList t = foldr' (:) [] t
+foldToList t = foldRight (:) [] t
 
 -- | The concatenation of all the elements of a container of lists.
 foldConcat :: (MyFoldable t) => t [a] -> [a]
@@ -130,7 +130,7 @@ foldLargest x = let
 -- given comparison function.
 foldLargestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
 foldLargestBy cmp x = let
-                        Largest y = foldr' max' MinusInfinity x where
+                        Largest y = foldRight max' MinusInfinity x where
                           max' a (Largest b) = case cmp a b of GT -> Largest a
                                                                _ -> Largest b
                           max' a MinusInfinity = Largest a
@@ -148,13 +148,12 @@ foldSmallest x = let
 -- given comparison function.
 foldSmallestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
 foldSmallestBy cmp x = let
-                         Smallest y = foldr' min' PlusInfinity x where
+                         Smallest y = foldRight min' PlusInfinity x where
                            min' a (Smallest b) = case cmp a b of GT -> Smallest b
                                                                  _ -> Smallest a
                            min' a PlusInfinity = Smallest a
                        in
                          y
-
 
 -- | Does the element occur in the structure?
 foldElem :: (MyFoldable t, Eq a) => a -> t a -> Bool

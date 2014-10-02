@@ -1,5 +1,7 @@
 module MyMonoid (
   MyMonoid(..),
+  MonoidFirst(..),
+  MonoidLast(..),
   MonoidDual(..),
   MonoidEndo(..),
   MonoidAll(..),
@@ -7,9 +9,7 @@ module MyMonoid (
   MonoidSum(..),
   MonoidProd(..),
   Smallest(Smallest, PlusInfinity),
-  Largest(Largest, MinusInfinity),
-  MonoidFirst(..),
-  MonoidLast(..)) where
+  Largest(Largest, MinusInfinity)) where
 
 
 class MyMonoid m where
@@ -40,8 +40,39 @@ instance (MyMonoid a, MyMonoid b) => MyMonoid (a, b) where
   (u, v) `monoidAppend` (w, x) = (u `monoidAppend` w, v `monoidAppend` x)
 
 
+-- | Lift a semigroup into 'Maybe' forming a 'Monoid' according to
+-- <http://en.wikipedia.org/wiki/Monoid>: \"Any semigroup @S@ may be
+-- turned into a monoid simply by adjoining an element @e@ not in @S@
+-- and defining @e*e = e@ and @e*s = s = s*e@ for all @s âˆˆ S@.\" Since
+-- there is no \"Semigroup\" typeclass providing just 'mappend', we
+-- use 'Monoid' instead.
+instance (MyMonoid a) => MyMonoid (Maybe a) where
+  monoidEmpty = Nothing
+  monoidAppend Nothing x = x
+  monoidAppend x Nothing = x
+  monoidAppend (Just x) (Just y) = Just (monoidAppend x y)
+
+
+-- | Maybe monoid returning the leftmost non-Nothing value.
+newtype MonoidFirst a = MonoidFirst { getMonoidFirst :: Maybe a } deriving (Show, Read)
+
+instance MyMonoid (MonoidFirst a) where
+  monoidEmpty = MonoidFirst Nothing
+  r@(MonoidFirst (Just _)) `monoidAppend` _ = r
+  MonoidFirst Nothing `monoidAppend` r = r
+
+
+-- | Maybe monoid returning the rightmost non-Nothing value.
+newtype MonoidLast a = MonoidLast { getMonoidLast :: Maybe a } deriving (Show, Read)
+
+instance MyMonoid (MonoidLast a) where
+  monoidEmpty = MonoidLast Nothing
+  _ `monoidAppend` r@(MonoidLast (Just _)) = r
+  r `monoidAppend` MonoidLast Nothing = r
+
+
 -- | The Dual Monoid (obtained by swapping the arguments of <>).
-newtype MonoidDual a = MonoidDual { getMonoidDual :: a } deriving (Show)
+newtype MonoidDual a = MonoidDual { getMonoidDual :: a } deriving (Show, Read)
 
 instance (MyMonoid a) => MyMonoid (MonoidDual a) where
   monoidEmpty = MonoidDual monoidEmpty
@@ -57,7 +88,7 @@ instance MyMonoid (MonoidEndo a) where
 
 
 -- | Boolean monoid under conjunction.
-newtype MonoidAll = MonoidAll { getMonoidAll :: Bool } deriving (Show)
+newtype MonoidAll = MonoidAll { getMonoidAll :: Bool } deriving (Show, Read)
 
 instance MyMonoid MonoidAll where
   monoidEmpty = MonoidAll True
@@ -65,7 +96,7 @@ instance MyMonoid MonoidAll where
 
 
 -- | Boolean monoid under disjunction.
-newtype MonoidAny = MonoidAny { getMonoidAny :: Bool } deriving (Show)
+newtype MonoidAny = MonoidAny { getMonoidAny :: Bool } deriving (Show, Read)
 
 instance MyMonoid MonoidAny where
   monoidEmpty = MonoidAny False
@@ -73,7 +104,7 @@ instance MyMonoid MonoidAny where
 
 
 -- | Monoid under addition.
-newtype MonoidSum a = MonoidSum { getMonoidSum :: a } deriving (Show)
+newtype MonoidSum a = MonoidSum { getMonoidSum :: a } deriving (Show, Read)
 
 instance (Num a) => MyMonoid (MonoidSum a) where
   monoidEmpty = MonoidSum 0
@@ -81,13 +112,14 @@ instance (Num a) => MyMonoid (MonoidSum a) where
 
 
 -- | Monoid under multiplication.
-newtype MonoidProd a = MonoidProd { getMonoidProd :: a } deriving (Show)
+newtype MonoidProd a = MonoidProd { getMonoidProd :: a } deriving (Show, Read)
 
 instance (Num a) => MyMonoid (MonoidProd a) where
   monoidEmpty = MonoidProd 1
   monoidAppend (MonoidProd x) (MonoidProd y) = MonoidProd (x * y)
 
 
+-- | Monoid under min.
 data Smallest a = Smallest a
                 | PlusInfinity
                 deriving (Show, Read, Eq, Ord)
@@ -97,6 +129,7 @@ instance (Ord a) => MyMonoid (Smallest a) where
   monoidAppend = min
 
 
+-- | Monoid under max.
 data Largest a = MinusInfinity
                | Largest a
                deriving (Show, Read, Eq, Ord)
@@ -104,34 +137,3 @@ data Largest a = MinusInfinity
 instance (Ord a) => MyMonoid (Largest a) where
   monoidEmpty = MinusInfinity
   monoidAppend = max
-
-
--- | Lift a semigroup into 'Maybe' forming a 'Monoid' according to
--- <http://en.wikipedia.org/wiki/Monoid>: \"Any semigroup @S@ may be
--- turned into a monoid simply by adjoining an element @e@ not in @S@
--- and defining @e*e = e@ and @e*s = s = s*e@ for all @s âˆˆ S@.\" Since
--- there is no \"Semigroup\" typeclass providing just 'mappend', we
--- use 'Monoid' instead.
-instance (MyMonoid a) => MyMonoid (Maybe a) where
-  monoidEmpty = Nothing
-  monoidAppend Nothing x = x
-  monoidAppend x Nothing = x
-  monoidAppend (Just x) (Just y) = Just (monoidAppend x y)
-
-
--- | Maybe monoid returning the leftmost non-Nothing value.
-newtype MonoidFirst a = MonoidFirst { getMonoidFirst :: Maybe a } deriving (Eq, Ord, Read, Show)
-
-instance MyMonoid (MonoidFirst a) where
-  monoidEmpty = MonoidFirst Nothing
-  r@(MonoidFirst (Just _)) `monoidAppend` _ = r
-  MonoidFirst Nothing `monoidAppend` r = r
-
-
--- | Maybe monoid returning the rightmost non-Nothing value.
-newtype MonoidLast a = MonoidLast { getMonoidLast :: Maybe a } deriving (Eq, Ord, Read, Show)
-
-instance MyMonoid (MonoidLast a) where
-  monoidEmpty = MonoidLast Nothing
-  _ `monoidAppend` r@(MonoidLast (Just _)) = r
-  r `monoidAppend` MonoidLast Nothing = r

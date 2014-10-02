@@ -1,20 +1,22 @@
 module MyMonoidDatan (
-  MonoidCount(..),
+  Count(..),
   monoidSum,
   monoidProd,
   monoidMin,
   monoidMax,
-  monoidCount) where
+  count,
+  Mean(..),
+  mean) where
 
 import MyMonoid
 
 
 -- http://twdkz.wordpress.com/2013/05/31/data-analysis-with-monoids
-newtype MonoidCount = MonoidCount Integer deriving (Show)
+newtype Count = Count Integer deriving (Show, Read, Eq, Ord)
 
-instance MyMonoid MonoidCount where
-  monoidEmpty = MonoidCount 0
-  MonoidCount n1 `monoidAppend` MonoidCount n2 = MonoidCount (n1 + n2)
+instance MyMonoid Count where
+  monoidEmpty = Count 0
+  Count n1 `monoidAppend` Count n2 = Count (n1 + n2)
 
 
 monoidSum :: (Num a) => a -> MonoidSum a
@@ -29,18 +31,20 @@ monoidMin = Smallest
 monoidMax :: (Ord a) => a -> Largest a
 monoidMax = Largest
 
-monoidCount :: a -> MonoidCount
-monoidCount _ = MonoidCount 1
+count :: a -> Count
+count _ = Count 1
 
 
-newtype MonoidMean a = MonoidMean (MonoidSum a, MonoidCount) deriving (Show)
+newtype Mean a = Mean (MonoidSum a, Count) deriving (Show, Read)
 
-instance (Num a) => MyMonoid (MonoidMean a) where
-  monoidEmpty = MonoidMean monoidEmpty
-  MonoidMean m1 `monoidAppend` MonoidMean m2 = MonoidMean (monoidAppend m1 m2)
+instance (Eq a, Num a) => Eq (Mean a) where
+  Mean (MonoidSum a1, Count b1) == Mean (MonoidSum a2, Count b2) = (a1 * (fromIntegral b2)) == (a2 * (fromIntegral b1))
 
-monoidMean v = MonoidMean (MonoidSum v, MonoidCount 1)
+instance (Ord a, Num a) => Ord (Mean a) where
+  Mean (MonoidSum a1, Count b1) `compare` Mean (MonoidSum a2, Count b2) = (a1 * (fromIntegral b2)) `compare` (a2 * (fromIntegral b1))
 
+instance (Num a) => MyMonoid (Mean a) where
+  monoidEmpty = Mean monoidEmpty
+  Mean m1 `monoidAppend` Mean m2 = Mean (monoidAppend m1 m2)
 
-class (MyMonoid a) => Aggregation a where
-  aggResult :: a -> b
+mean v = Mean (MonoidSum v, Count 1)
