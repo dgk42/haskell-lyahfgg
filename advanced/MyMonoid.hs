@@ -12,12 +12,42 @@ module MyMonoid (
   Largest(Largest, MinusInfinity)) where
 
 
+-- ---------------------------------------------------------------------------
+-- | The class of monoids (types with an associative binary operation that
+-- has an identity).  Instances should satisfy the following laws:
+--
+--  * @mappend mempty x = x@
+--
+--  * @mappend x mempty = x@
+--
+--  * @mappend x (mappend y z) = mappend (mappend x y) z@
+--
+--  * @mconcat = 'foldr' mappend mempty@
+--
+-- The method names refer to the monoid of lists under concatenation,
+-- but there are many other instances.
+--
+-- Minimal complete definition: 'mempty' and 'mappend'.
+--
+-- Some types can be viewed as a monoid in more than one way,
+-- e.g. both addition and multiplication on numbers.
+-- In such cases we often define @newtype@s and make those instances
+-- of 'Monoid', e.g. 'Sum' and 'Product'.
+
 class MyMonoid m where
+  -- ^ Identity of 'mappend'
   monoidEmpty :: m
+  -- ^ An associative operation
   monoidAppend :: m -> m -> m
+
   -- bonus method!
+  -- ^ Fold a list using the monoid.
+  -- For most types, the default definition for 'mconcat' will be
+  -- used, but the function is included in the class definition so
+  -- that an optimized version can be provided for specific types.
   monoidConcat :: [m] -> m
   monoidConcat = foldr monoidAppend monoidEmpty
+
   {- alternatively (in terms of monoidConcat):
   monoidEmpty = monoidConcat []
   monoidAppend a b = monoidConcat [a, b]
@@ -56,9 +86,9 @@ instance (MyMonoid a, MyMonoid b) => MyMonoid (a, b) where
 -- use 'Monoid' instead.
 instance (MyMonoid a) => MyMonoid (Maybe a) where
   monoidEmpty = Nothing
-  monoidAppend Nothing x = x
-  monoidAppend x Nothing = x
-  monoidAppend (Just x) (Just y) = Just (monoidAppend x y)
+  Nothing `monoidAppend` x = x
+  x `monoidAppend` Nothing = x
+  Just x `monoidAppend` Just y = Just (monoidAppend x y)
 
 
 -- | Maybe monoid returning the leftmost non-Nothing value.

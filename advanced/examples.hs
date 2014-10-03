@@ -2,6 +2,7 @@ import MyFunctor
 import MyMonoid
 import MyApplicativeFunctor
 import MyFoldable
+import MyMonad
 import Tree1
 import Tree
 
@@ -97,3 +98,48 @@ fx :: Int -> Int -> Int -> Int
 fx x y z = 4 * x + 2 * y + z
 
 example21 = fx `funMap` (Just 5) `apply` (Just 5) `apply` (Just 5)
+
+
+type Person = String
+
+father :: Person -> Maybe Person
+father "Dio" = Just "George"
+father "Nick" = Just "George"
+father "George" = Just "Nionios"
+father "Elpis" = Just "Nicolas"
+father _ = Nothing
+
+mother :: Person -> Maybe Person
+mother "Dio" = Just "Elpis"
+mother "Nick" = Just "Elpis"
+mother "George" = Just "Maria"
+mother "Elpis" = Just "Eftychia"
+mother _ = Nothing
+
+paternalGrandfather :: Person -> Maybe Person
+paternalGrandfather p = father p `monadBind` father
+
+maternalGrandfather :: Person -> Maybe Person
+maternalGrandfather p = mother p `monadBind` father
+
+bothGrandfathers :: Person -> Maybe (Person, Person)
+bothGrandfathers p =
+  father p `monadBind`
+    (\dad -> father dad `monadBind`
+      (\gfdad -> mother p `monadBind`
+        (\mom -> father mom `monadBind`
+          (\gfmom -> monadReturn (gfdad, gfmom)))))
+
+bothGrandmothers :: Person -> Maybe (Person, Person)
+bothGrandmothers p =
+  father p `monadBind`
+    (\dad -> mother dad `monadBind`
+      (\gmdad -> mother p `monadBind`
+        (\mom -> mother mom `monadBind`
+          (\gmmom -> monadReturn (gmdad, gmmom)))))
+
+
+example22 = monadReturn (+) `monadAp` [10, 11, 12] `monadAp` [0, 1]
+example23 = monadReturn (+) `monadAp` Just 42 `monadAp` Just 100
+example24 = monadReturn (+) `monadAp` Nothing `monadAp` Just 100
+example25 = monadReturn (+) `monadAp` Just 42 `monadAp` Nothing

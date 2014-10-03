@@ -21,6 +21,32 @@ module MyFoldable (
 import MyMonoid
 
 
+-- Class of data structures that can be folded to a summary value.
+
+-- | Data structures that can be folded.
+--
+-- Minimal complete definition: 'foldMap' or 'foldr'.
+--
+-- For example, given a data type
+--
+-- > data Tree a = Empty | Leaf a | Node (Tree a) a (Tree a)
+--
+-- a suitable instance would be
+--
+-- > instance Foldable Tree where
+-- >    foldMap f Empty = mempty
+-- >    foldMap f (Leaf x) = f x
+-- >    foldMap f (Node l k r) = foldMap f l `mappend` f k `mappend` foldMap f r
+--
+-- This is suitable even for abstract types, as the monoid is assumed
+-- to satisfy the monoid laws.  Alternatively, one could define @foldr@:
+--
+-- > instance Foldable Tree where
+-- >    foldr f z Empty = z
+-- >    foldr f z (Leaf x) = f x z
+-- >    foldr f z (Node l k r) = foldr f (f k (foldr f z r)) l
+--
+
 class MyFoldable t where
   -- | Combine the elements of a structure using a monoid.
   fold :: (MyMonoid m) => t m -> m
@@ -121,39 +147,31 @@ foldProd = getMonoidProd . foldMap MonoidProd
 
 -- | The largest element of a non-empty structure.
 foldLargest :: (MyFoldable t, Ord a) => t a -> a
-foldLargest x = let
-                  Largest y = foldMap Largest x
-                in
-                  y
+foldLargest x = let Largest y = foldMap Largest x
+                in y
 
 -- | The largest element of a non-empty structure with respect to the
 -- given comparison function.
 foldLargestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
-foldLargestBy cmp x = let
-                        Largest y = foldRight max' MinusInfinity x where
-                          max' a (Largest b) = case cmp a b of GT -> Largest a
-                                                               _ -> Largest b
-                          max' a MinusInfinity = Largest a
-                      in
-                        y
+foldLargestBy cmp x = let Largest y = foldRight max' MinusInfinity x where
+                            max' a (Largest b) = case cmp a b of GT -> Largest a
+                                                                 _ -> Largest b
+                            max' a MinusInfinity = Largest a
+                      in y
 
 -- | The least element of a non-empty structure.
 foldSmallest :: (MyFoldable t, Ord a) => t a -> a
-foldSmallest x = let
-                   Smallest y = foldMap Smallest x
-                 in
-                   y
+foldSmallest x = let Smallest y = foldMap Smallest x
+                 in y
 
 -- | The least element of a non-empty structure with respect to the
 -- given comparison function.
 foldSmallestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
-foldSmallestBy cmp x = let
-                         Smallest y = foldRight min' PlusInfinity x where
-                           min' a (Smallest b) = case cmp a b of GT -> Smallest b
-                                                                 _ -> Smallest a
-                           min' a PlusInfinity = Smallest a
-                       in
-                         y
+foldSmallestBy cmp x = let Smallest y = foldRight min' PlusInfinity x where
+                             min' a (Smallest b) = case cmp a b of GT -> Smallest b
+                                                                   _ -> Smallest a
+                             min' a PlusInfinity = Smallest a
+                       in y
 
 -- | Does the element occur in the structure?
 foldElem :: (MyFoldable t, Eq a) => a -> t a -> Bool

@@ -1,4 +1,4 @@
-module MyMonoidDatan (
+module MonoidDatan (
   Count(..),
   monoidSum,
   monoidProd,

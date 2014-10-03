@@ -6,12 +6,56 @@ import MyFunctor
 import MyMonoid
 
 
+-- | A functor with application, providing operations to
+--
+-- * embed pure expressions ('pure'), and
+--
+-- * sequence computations and combine their results ('<*>').
+--
+-- A minimal complete definition must include implementations of these
+-- functions satisfying the following laws:
+--
+-- [/identity/]
+--
+--      @'pure' 'id' '<*>' v = v@
+--
+-- [/composition/]
+--
+--      @'pure' (.) '<*>' u '<*>' v '<*>' w = u '<*>' (v '<*>' w)@
+--
+-- [/homomorphism/]
+--
+--      @'pure' f '<*>' 'pure' x = 'pure' (f x)@
+--
+-- [/interchange/]
+--
+--      @u '<*>' 'pure' y = 'pure' ('$' y) '<*>' u@
+--
+-- The other methods have the following default definitions, which may
+-- be overridden with equivalent specialized implementations:
+--
+--   * @u '*>' v = 'pure' ('const' 'id') '<*>' u '<*>' v@
+--
+--   * @u '<*' v = 'pure' 'const' '<*>' u '<*>' v@
+--
+-- As a consequence of these laws, the 'Functor' instance for @f@ will satisfy
+--
+--   * @'fmap' f x = 'pure' f '<*>' x@
+--
+-- If @f@ is also a 'Monad', it should satisfy
+--
+--   * @'pure' = 'return'@
+--
+--   * @('<*>') = 'ap'@
+--
+-- (which implies that 'pure' and '<*>' satisfy the applicative functor laws).
+
 class (MyFunctor f) => MyApplicativeFunctor f where
   -- | Lift a value.
   pure :: a -> f a
 
   -- | Sequential application.
-  -- (<*>)
+  -- <*>
   apply :: f (a -> b) -> f a -> f b
 
 instance MyApplicativeFunctor Maybe where
@@ -34,6 +78,10 @@ instance (MyMonoid a) => MyApplicativeFunctor ((,) a) where
   (u, f) `apply` (v, x) = (u `monoidAppend` v, f x)
 
 
+-- | Lists, but with an 'Applicative' functor based on zipping, so that
+--
+-- @f '<$>' 'ZipList' xs1 '<*>' ... '<*>' 'ZipList' xsn = 'ZipList' (zipWithn f xs1 ... xsn)@
+--
 newtype MyZipList a = MyZipList [a]
 
 instance MyFunctor MyZipList where
