@@ -1,22 +1,22 @@
 module MyFoldable (
   MyFoldable(..),
-  foldFindFirst,
-  foldFindLast,
-  foldToList,
+  foldAll,
+  foldAnd,
+  foldAny,
   foldConcat,
   foldConcatMap,
-  foldAnd,
-  foldOr,
-  foldAny,
-  foldAll,
-  foldSum,
-  foldProd,
+  foldElem,
+  foldFindFirst,
+  foldFindLast,
   foldLargest,
   foldLargestBy,
+  foldNotElem,
+  foldOr,
+  foldProd,
   foldSmallest,
   foldSmallestBy,
-  foldElem,
-  foldNotElem) where
+  foldSum,
+  foldToList) where
 
 import MyMonoid
 
@@ -49,12 +49,12 @@ import MyMonoid
 
 class MyFoldable t where
   -- | Combine the elements of a structure using a monoid.
-  fold :: (MyMonoid m) => t m -> m
+  fold :: MyMonoid m => t m -> m
   fold = foldMap id
 
   -- | Map each element of the structure to a monoid,
   -- and combine the results.
-  foldMap :: (MyMonoid m) => (a -> m) -> t a -> m
+  foldMap :: MyMonoid m => (a -> m) -> t a -> m
   foldMap f = foldRight (monoidAppend . f) monoidEmpty
 
   -- | Right-associative fold of a structure.
@@ -93,11 +93,11 @@ instance MyFoldable ((,) a) where
   foldRight f z (_, y) = f y z
 
 
-foldFindFirst :: (MyFoldable t) => (a -> Bool) -> t a -> Maybe a
+foldFindFirst :: MyFoldable t => (a -> Bool) -> t a -> Maybe a
 foldFindFirst p = getMonoidFirst . foldMap (\x -> if p x then MonoidFirst (Just x)
                                                          else MonoidFirst Nothing)
 
-foldFindLast :: (MyFoldable t) => (a -> Bool) -> t a -> Maybe a
+foldFindLast :: MyFoldable t => (a -> Bool) -> t a -> Maybe a
 foldFindLast p = getMonoidLast . foldMap (\x -> if p x then MonoidLast (Just x)
                                                        else MonoidLast Nothing)
 
@@ -105,36 +105,36 @@ foldFindLast p = getMonoidLast . foldMap (\x -> if p x then MonoidLast (Just x)
 -- These use foldr rather than foldMap to avoid repeated concatenation.
 
 -- | List of elements of a structure.
-foldToList :: (MyFoldable t) => t a -> [a]
+foldToList :: MyFoldable t => t a -> [a]
 foldToList t = foldRight (:) [] t
 
 -- | The concatenation of all the elements of a container of lists.
-foldConcat :: (MyFoldable t) => t [a] -> [a]
+foldConcat :: MyFoldable t => t [a] -> [a]
 foldConcat = fold
 
 -- | Map a function over all the elements of a container and concatenate
 -- the resulting lists.
-foldConcatMap :: (MyFoldable t) => (a -> [b]) -> t a -> [b]
+foldConcatMap :: MyFoldable t => (a -> [b]) -> t a -> [b]
 foldConcatMap = foldMap
 
 -- | 'and' returns the conjunction of a container of Bools.  For the
 -- result to be 'True', the container must be finite; 'False', however,
 -- results from a 'False' value finitely far from the left end.
-foldAnd :: (MyFoldable t) => t Bool -> Bool
+foldAnd :: MyFoldable t => t Bool -> Bool
 foldAnd = getMonoidAll . foldMap MonoidAll
 
 -- | 'or' returns the disjunction of a container of Bools.  For the
 -- result to be 'False', the container must be finite; 'True', however,
 -- results from a 'True' value finitely far from the left end.
-foldOr :: (MyFoldable t) => t Bool -> Bool
+foldOr :: MyFoldable t => t Bool -> Bool
 foldOr = getMonoidAny . foldMap MonoidAny
 
 -- | Determines whether any element of the structure satisfies the predicate.
-foldAny :: (MyFoldable t) => (a -> Bool) -> t a -> Bool
+foldAny :: MyFoldable t => (a -> Bool) -> t a -> Bool
 foldAny p = getMonoidAny . foldMap (MonoidAny . p)
 
 -- | Determines whether all elements of the structure satisfy the predicate.
-foldAll :: (MyFoldable t) => (a -> Bool) -> t a -> Bool
+foldAll :: MyFoldable t => (a -> Bool) -> t a -> Bool
 foldAll p = getMonoidAll . foldMap (MonoidAll . p)
 
 -- | The 'sum' function computes the sum of the numbers of a structure.
@@ -152,7 +152,7 @@ foldLargest x = let Largest y = foldMap Largest x
 
 -- | The largest element of a non-empty structure with respect to the
 -- given comparison function.
-foldLargestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
+foldLargestBy :: MyFoldable t => (a -> a -> Ordering) -> t a -> a
 foldLargestBy cmp x = let Largest y = foldRight max' MinusInfinity x where
                             max' a (Largest b) = case cmp a b of GT -> Largest a
                                                                  _ -> Largest b
@@ -166,7 +166,7 @@ foldSmallest x = let Smallest y = foldMap Smallest x
 
 -- | The least element of a non-empty structure with respect to the
 -- given comparison function.
-foldSmallestBy :: (MyFoldable t) => (a -> a -> Ordering) -> t a -> a
+foldSmallestBy :: MyFoldable t => (a -> a -> Ordering) -> t a -> a
 foldSmallestBy cmp x = let Smallest y = foldRight min' PlusInfinity x where
                              min' a (Smallest b) = case cmp a b of GT -> Smallest b
                                                                    _ -> Smallest a

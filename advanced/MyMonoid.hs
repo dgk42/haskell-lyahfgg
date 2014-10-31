@@ -1,15 +1,15 @@
 module MyMonoid (
-  MyMonoid(..),
-  MonoidFirst(..),
-  MonoidLast(..),
-  MonoidDual(..),
-  MonoidEndo(..),
+  Largest(Largest, MinusInfinity),
   MonoidAll(..),
   MonoidAny(..),
-  MonoidSum(..),
+  MonoidDual(..),
+  MonoidEndo(..),
+  MonoidFirst(..),
+  MonoidLast(..),
   MonoidProd(..),
-  Smallest(Smallest, PlusInfinity),
-  Largest(Largest, MinusInfinity)) where
+  MonoidSum(..),
+  MyMonoid(..),
+  Smallest(Smallest, PlusInfinity)) where
 
 
 -- ---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class MyMonoid m where
   -}
 
 
-instance (MyMonoid b) => MyMonoid (a -> b) where
+instance MyMonoid b => MyMonoid (a -> b) where
   monoidEmpty _ = monoidEmpty
   monoidAppend f g x = f x `monoidAppend` g x
 
@@ -84,7 +84,7 @@ instance (MyMonoid a, MyMonoid b) => MyMonoid (a, b) where
 -- and defining @e*e = e@ and @e*s = s = s*e@ for all @s âˆˆ S@.\" Since
 -- there is no \"Semigroup\" typeclass providing just 'mappend', we
 -- use 'Monoid' instead.
-instance (MyMonoid a) => MyMonoid (Maybe a) where
+instance MyMonoid a => MyMonoid (Maybe a) where
   monoidEmpty = Nothing
   Nothing `monoidAppend` x = x
   x `monoidAppend` Nothing = x
@@ -112,7 +112,7 @@ instance MyMonoid (MonoidLast a) where
 -- | The Dual Monoid (obtained by swapping the arguments of <>).
 newtype MonoidDual a = MonoidDual { getMonoidDual :: a } deriving (Show, Read)
 
-instance (MyMonoid a) => MyMonoid (MonoidDual a) where
+instance MyMonoid a => MyMonoid (MonoidDual a) where
   monoidEmpty = MonoidDual monoidEmpty
   MonoidDual x `monoidAppend` MonoidDual y = MonoidDual (y `monoidAppend` x)
 
@@ -144,7 +144,7 @@ instance MyMonoid MonoidAny where
 -- | Monoid under addition.
 newtype MonoidSum a = MonoidSum { getMonoidSum :: a } deriving (Show, Read)
 
-instance (Num a) => MyMonoid (MonoidSum a) where
+instance Num a => MyMonoid (MonoidSum a) where
   monoidEmpty = MonoidSum 0
   MonoidSum x `monoidAppend` MonoidSum y = MonoidSum (x + y)
 
@@ -152,7 +152,7 @@ instance (Num a) => MyMonoid (MonoidSum a) where
 -- | Monoid under multiplication.
 newtype MonoidProd a = MonoidProd { getMonoidProd :: a } deriving (Show, Read)
 
-instance (Num a) => MyMonoid (MonoidProd a) where
+instance Num a => MyMonoid (MonoidProd a) where
   monoidEmpty = MonoidProd 1
   monoidAppend (MonoidProd x) (MonoidProd y) = MonoidProd (x * y)
 
@@ -162,7 +162,7 @@ data Smallest a = Smallest a
                 | PlusInfinity
                 deriving (Show, Read, Eq, Ord)
 
-instance (Ord a) => MyMonoid (Smallest a) where
+instance Ord a => MyMonoid (Smallest a) where
   monoidEmpty = PlusInfinity
   monoidAppend = min
 
@@ -172,6 +172,6 @@ data Largest a = MinusInfinity
                | Largest a
                deriving (Show, Read, Eq, Ord)
 
-instance (Ord a) => MyMonoid (Largest a) where
+instance Ord a => MyMonoid (Largest a) where
   monoidEmpty = MinusInfinity
   monoidAppend = max

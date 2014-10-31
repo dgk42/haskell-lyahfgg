@@ -1,6 +1,6 @@
 module MyApplicativeFunctor (
   MyApplicativeFunctor(..),
-  MyZipList(..))where
+  MyZipList(..)) where
 
 import MyFunctor
 import MyMonoid
@@ -73,7 +73,7 @@ instance MyApplicativeFunctor ((->) t) where
   pure = const
   f `apply` g = \t -> f t (g t)
 
-instance (MyMonoid a) => MyApplicativeFunctor ((,) a) where
+instance MyMonoid a => MyApplicativeFunctor ((,) a) where
   pure x = (monoidEmpty, x)
   (u, f) `apply` (v, x) = (u `monoidAppend` v, f x)
 

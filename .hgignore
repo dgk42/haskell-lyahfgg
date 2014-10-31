@@ -5,6 +5,7 @@ syntax: glob
 *.orig
 *.rej
 *~
+.~*
 *.bak
 
 *.o

@@ -42,5 +42,5 @@ instance MyFunctor ((,) a) where
 
 
 -- | @'void' value@ discards or ignores the result of evaluation, such as the return value of an 'IO' action.
-funVoid :: (MyFunctor f) => f a -> f ()
+funVoid :: MyFunctor f => f a -> f ()
 funVoid = funMap (const ())

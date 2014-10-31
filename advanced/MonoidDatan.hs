@@ -1,12 +1,12 @@
 module MonoidDatan (
   Count(..),
-  monoidSum,
-  monoidProd,
-  monoidMin,
-  monoidMax,
-  count,
   Mean(..),
-  mean) where
+  count,
+  mean,
+  monoidMax,
+  monoidMin,
+  monoidProd,
+  monoidSum) where
 
 import MyMonoid
 
@@ -19,16 +19,16 @@ instance MyMonoid Count where
   Count n1 `monoidAppend` Count n2 = Count (n1 + n2)
 
 
-monoidSum :: (Num a) => a -> MonoidSum a
+monoidSum :: Num a => a -> MonoidSum a
 monoidSum = MonoidSum
 
-monoidProd :: (Num a) => a -> MonoidProd a
+monoidProd :: Num a => a -> MonoidProd a
 monoidProd = MonoidProd
 
-monoidMin :: (Ord a) => a -> Smallest a
+monoidMin :: Ord a => a -> Smallest a
 monoidMin = Smallest
 
-monoidMax :: (Ord a) => a -> Largest a
+monoidMax :: Ord a => a -> Largest a
 monoidMax = Largest
 
 count :: a -> Count
@@ -43,7 +43,7 @@ instance (Eq a, Num a) => Eq (Mean a) where
 instance (Ord a, Num a) => Ord (Mean a) where
   Mean (MonoidSum a1, Count b1) `compare` Mean (MonoidSum a2, Count b2) = (a1 * (fromIntegral b2)) `compare` (a2 * (fromIntegral b1))
 
-instance (Num a) => MyMonoid (Mean a) where
+instance Num a => MyMonoid (Mean a) where
   monoidEmpty = Mean monoidEmpty
   Mean m1 `monoidAppend` Mean m2 = Mean (monoidAppend m1 m2)
 
