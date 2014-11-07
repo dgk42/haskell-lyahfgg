@@ -40,7 +40,7 @@ isDefined m = cata m (const True) False
 isEmpty :: Option a -> Bool
 isEmpty m = (not . isDefined) m
 
--- WARNING: not defined for None
+-- WARNING: not defined for none
 -- fromJust
 get :: Option a -> a
 get m = cata m id (error "none.get")
