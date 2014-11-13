@@ -2,7 +2,7 @@
 -- TODO:
 
 either :: (a -> c) -> (b -> c) -> Either a b -> c
-either f _ (Left x) = f x
+either f _ (Left x)  = f x
 either _ g (Right y) = g y
 
 class MyFunctor f => Decisive f where

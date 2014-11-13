@@ -59,7 +59,7 @@ removeFromSet e s = \i -> (setDifference s (singletonSet e)) i
 
 -- Utility function to create set from a list.
 toSet :: Eq a => [a] -> MySet a
-toSet [] = emptySet
+toSet []     = emptySet
 toSet (x:xs) = addToSet (toSet xs) x
 
 fromSet :: MySet a -> [a] -> [a]

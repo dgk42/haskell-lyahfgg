@@ -21,6 +21,8 @@ module MyMonad (
   monadUnless,
   monadWhen) where
 
+import MyApplicativeFunctor
+
 
 {- | The 'Monad' class defines the basic operations over a /monad/,
 a concept from a branch of mathematics known as /category theory/.
@@ -45,7 +47,7 @@ The instances of 'Monad' for lists, 'Data.Maybe.Maybe' and 'System.IO.IO'
 defined in the "Prelude" satisfy these laws.
 -}
 
-class MyMonad m where
+class (MyApplicativeFunctor m) => MyMonad m where
   -- | Inject a value into the monadic type.
   monadReturn :: a -> m a
 
@@ -75,7 +77,7 @@ instance MyMonad Maybe where
 
 instance MyMonad (Either e) where
   monadReturn = Right
-  Left l `monadBind` _ = Left l
+  Left l `monadBind` _  = Left l
   Right r `monadBind` k = k r
 
 
@@ -121,15 +123,14 @@ monadComposeFlipped = flip monadCompose
 -- and collect the results.
 monadSequence :: MyMonad m => [m a] -> m [a]
 monadSequence ms = foldr k (monadReturn []) ms where
-                     k m m' =
-                       m `monadBind`
-                         (\x -> m' `monadBind`
-                           (\xs -> monadReturn (x:xs)))
+                     k m m' = m           `monadBind` (\x ->
+                              m'          `monadBind` (\xs ->
+                              monadReturn (x:xs)))
 
 -- | Evaluate each action in the sequence from left to right,
 -- and ignore the results.
 monadSequenceEffects :: MyMonad m => [m a] -> m ()
-monadSequenceEffects ms =  foldr monadThen (monadReturn ()) ms
+monadSequenceEffects ms = foldr monadThen (monadReturn ()) ms
 
 
 -- | @'mapM' f@ is equivalent to @'sequence' . 'map' f@.
@@ -144,10 +145,9 @@ monadMapEffects f as =  monadSequenceEffects (map f as)
 -- | This generalizes the list-based 'filter' function.
 monadFilter :: MyMonad m => (a -> m Bool) -> [a] -> m [a]
 monadFilter _ [] = monadReturn []
-monadFilter p (x:xs) =
-  p x `monadBind`
-    (\flg -> monadFilter p xs `monadBind`
-      (\ys -> monadReturn (if flg then x:ys else ys)))
+monadFilter p (x:xs) = p x              `monadBind` (\flg ->
+                       monadFilter p xs `monadBind` (\ys ->
+                       monadReturn (if flg then x:ys else ys)))
 
 
 -- | 'forM' is 'mapM' with its arguments flipped
@@ -183,7 +183,7 @@ If right-to-left evaluation is required, the input list should be reversed.
 -}
 
 monadFold :: MyMonad m => (a -> b -> m a) -> a -> [b] -> m a
-monadFold _ a [] = monadReturn a
+monadFold _ a []     = monadReturn a
 monadFold f a (x:xs) = f a x `monadBind` \fax -> monadFold f fax xs
 
 -- | Like 'foldM', but discards the result.
@@ -233,11 +233,10 @@ monadAp = liftM2 id where
   -- | Promote a function to a monad, scanning the monadic arguments from
   -- left to right.  For example,
   --
-  -- >    liftM2 (+) [0,1] [0,2] = [0,2,1,3]
+  -- >    liftM2 (+) [0,1] [0,2]      = [0,2,1,3]
   -- >    liftM2 (+) (Just 1) Nothing = Nothing
   --
   liftM2 :: MyMonad m => (a1 -> a2 -> r) -> m a1 -> m a2 -> m r
-  liftM2 f m1 m2 =
-    m1 `monadBind`
-      (\x1 -> m2 `monadBind`
-        (\x2 -> monadReturn (f x1 x2)))
+  liftM2 f m1 m2 = m1          `monadBind` (\x1 ->
+                   m2          `monadBind` (\x2 ->
+                   monadReturn (f x1 x2)))

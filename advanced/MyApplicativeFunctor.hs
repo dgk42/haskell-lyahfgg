@@ -2,8 +2,8 @@ module MyApplicativeFunctor (
   MyApplicativeFunctor(..),
   MyZipList(..)) where
 
-import MyFunctor
 import MyMonoid
+import MyFunctor
 
 
 -- | A functor with application, providing operations to
@@ -58,20 +58,29 @@ class (MyFunctor f) => MyApplicativeFunctor f where
   -- <*>
   apply :: f (a -> b) -> f a -> f b
 
+
+instance MyApplicativeFunctor [] where
+  pure x = [x]
+  fs `apply` xs = [f x | f <- fs, x <- xs]
+
+
 instance MyApplicativeFunctor Maybe where
   pure = Just
   Just f `apply` Just x = Just (f x)
-  _ `apply` _ = Nothing
+  _ `apply` _           = Nothing
+
 
 instance MyApplicativeFunctor (Either e) where
   pure = Right
   Right f `apply` Right x = Right (f x)
-  Left f `apply` _ = Left f
-  _ `apply` Left x = Left x
+  Left f `apply` _        = Left f
+  _ `apply` Left x        = Left x
+
 
 instance MyApplicativeFunctor ((->) t) where
   pure = const
   f `apply` g = \t -> f t (g t)
+
 
 instance MyMonoid a => MyApplicativeFunctor ((,) a) where
   pure x = (monoidEmpty, x)
@@ -88,5 +97,5 @@ instance MyFunctor MyZipList where
   funMap f (MyZipList xs) = MyZipList (map f xs)
 
 instance MyApplicativeFunctor MyZipList where
-  (MyZipList fs) `apply` (MyZipList xs) = MyZipList (zipWith ($) fs xs)
   pure x = MyZipList (repeat x)
+  (MyZipList fs) `apply` (MyZipList xs) = MyZipList (zipWith ($) fs xs)

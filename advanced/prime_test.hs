@@ -7,8 +7,8 @@ import Prime
 
 testPrime :: Integral a => a -> Bool
 testPrime n
-          | n <= 1 = False
-          | n == 2 = True
+          | n <= 1    = False
+          | n == 2    = True
           | otherwise = all (\y -> n `mod` y /= 0) pseudoPrimes where
               pseudoPrimes = (2:[3,5..(floor . sqrt . fromIntegral) n])
 

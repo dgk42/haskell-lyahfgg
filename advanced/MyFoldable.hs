@@ -34,16 +34,16 @@ import MyMonoid
 -- a suitable instance would be
 --
 -- > instance Foldable Tree where
--- >    foldMap f Empty = mempty
--- >    foldMap f (Leaf x) = f x
+-- >    foldMap f Empty        = mempty
+-- >    foldMap f (Leaf x)     = f x
 -- >    foldMap f (Node l k r) = foldMap f l `mappend` f k `mappend` foldMap f r
 --
 -- This is suitable even for abstract types, as the monoid is assumed
 -- to satisfy the monoid laws.  Alternatively, one could define @foldr@:
 --
 -- > instance Foldable Tree where
--- >    foldr f z Empty = z
--- >    foldr f z (Leaf x) = f x z
+-- >    foldr f z Empty        = z
+-- >    foldr f z (Leaf x)     = f x z
 -- >    foldr f z (Node l k r) = foldr f (f k (foldr f z r)) l
 --
 
@@ -74,22 +74,21 @@ instance MyFoldable [] where
   foldLeft = foldl
 
 instance MyFoldable Maybe where
-  foldRight _ z Nothing = z
+  foldRight _ z Nothing  = z
   foldRight f z (Just x) = f x z
 
-  foldLeft _ z Nothing = z
+  foldLeft _ z Nothing  = z
   foldLeft f z (Just x) = f z x
 
 instance MyFoldable (Either a) where
-  foldMap _ (Left _) = monoidEmpty
+  foldMap _ (Left _)  = monoidEmpty
   foldMap f (Right y) = f y
 
-  foldRight _ z (Left _) = z
+  foldRight _ z (Left _)  = z
   foldRight f z (Right y) = f y z
 
 instance MyFoldable ((,) a) where
   foldMap f (_, y) = f y
-
   foldRight f z (_, y) = f y z
 
 

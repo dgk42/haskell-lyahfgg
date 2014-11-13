@@ -1,33 +1,55 @@
-import MyFunctor
 import MyMonoid
-import MyApplicativeFunctor
 import MyFoldable
+import MyFunctor
+import MyApplicativeFunctor
 import MyMonad
+import MyIOAction
 import MySet
 import Tree1
 import Tree
 
 
-example0 = funMap (2*) (Branch (Branch (Leaf 1) (Leaf 2)) (Branch (Leaf 3) (Leaf 4)))
+tree = (Branch (Branch (Leaf 1)
+                       (Leaf 2))
+               (Branch (Leaf 3)
+                       (Leaf 4)))
+
+example0 = funMap (2*) tree
+example1 = foldMap (MonoidAny . (== 1)) tree
 
 
-example10 = MonoidSum 5 `monoidAppend` MonoidSum 6 `monoidAppend` MonoidSum 10
+example10 = MonoidSum 5 `monoidAppend`
+            MonoidSum 6 `monoidAppend`
+            MonoidSum 10
 example11 = monoidConcat [MonoidSum 5, MonoidSum 6, MonoidSum 10]
 example12 = getMonoidSum $ monoidConcat $ map MonoidSum [5, 6, 10]
 example13 = monoidConcat ["5", "6", "10"]
 
-example14 = Smallest 5 `monoidAppend` PlusInfinity `monoidAppend` Smallest 6 `monoidAppend` Smallest 10 `monoidAppend` PlusInfinity
+example14 = Smallest 5 `monoidAppend`
+            PlusInfinity `monoidAppend`
+            Smallest 6 `monoidAppend`
+            Smallest 10 `monoidAppend`
+            PlusInfinity
 
-example15 = Largest 5 `monoidAppend` MinusInfinity `monoidAppend` Largest 6 `monoidAppend` Largest 10 `monoidAppend` MinusInfinity
+example15 = Largest 5 `monoidAppend`
+            MinusInfinity `monoidAppend`
+            Largest 6 `monoidAppend`
+            Largest 10 `monoidAppend`
+            MinusInfinity
 
-example16 = Just (MonoidSum 5) `monoidAppend` Nothing `monoidAppend` Just (MonoidSum 6) `monoidAppend` Just (MonoidSum 10) `monoidAppend` Nothing
+example16 = Just (MonoidSum 5) `monoidAppend`
+            Nothing `monoidAppend`
+            Just (MonoidSum 6)
+            `monoidAppend`
+            Just (MonoidSum 10)
+            `monoidAppend` Nothing
 
 
 countIfGreaterThan15 x = if x > 15 then 1 else 0
 
 tree1 = Node 7
-             (Single 1)
-             (Single 2)
+             (Node 1 Empty Empty)
+             (Node 2 Empty Empty)
 example20 = foldMap (MonoidAny . (== 1)) tree1
 example21 = foldMap (MonoidAll . (> 5)) tree1
 example22 = foldMap Largest tree1
@@ -41,17 +63,11 @@ tree2 = Node 15
              (Node 13
                    (Node 10
                          Empty
-                         (Single 42))
-                   (Node 16
-                         Empty
-                         Empty))
+                         (Node 42 Empty Empty))
+                   (Node 16 Empty Empty))
              (Node 19
-                   (Node 18
-                         Empty
-                         Empty)
-                   (Node 10
-                         Empty
-                         Empty))
+                   (Node 18 Empty Empty)
+                   (Node 10 Empty Empty))
 example20' = foldMap (MonoidAny . (== 1)) tree2
 example21' = foldMap (MonoidAll . (> 5)) tree2
 example22' = foldMap Largest tree2
@@ -64,20 +80,20 @@ example27' = foldFindFirst (== 42) tree2
 tree3 :: Tree (String, Int)
 tree3 = Node ("a", 5)
              (Node ("b", 1)
-                   (Single ("d", 9))
-                   (Single ("e", 7)))
+                   (Node ("d", 9) Empty Empty)
+                   (Node ("e", 7) Empty Empty))
              (Node ("c", 3)
-                   (Single ("f", 10))
+                   (Node ("f", 10) Empty Empty)
                    (Node ("g", 2)
                          (Node ("h", 4)
                                (Node ("i", 8)
-                                     (Single ("k", 69105))
+                                     (Node ("k", 69105) Empty Empty)
                                      Empty)
                                (Node ("j", 42)
                                      Empty
                                      (Node ("l", 69)
                                            Empty
-                                           (Single ("m", 0)))))
+                                           (Node ("m", 0) Empty Empty))))
                          Empty))
 
 newtype TreeContent = TreeContent (String, Int) deriving (Show)
@@ -104,18 +120,18 @@ example40 = fx `funMap` (Just 5) `apply` (Just 5) `apply` (Just 5)
 type Person = String
 
 father :: Person -> Maybe Person
-father "Dio" = Just "George"
-father "Nick" = Just "George"
+father "Dio"    = Just "George"
+father "Nick"   = Just "George"
 father "George" = Just "Nionios"
-father "Elpis" = Just "Nicolas"
-father _ = Nothing
+father "Elpis"  = Just "Nicolas"
+father _        = Nothing
 
 mother :: Person -> Maybe Person
-mother "Dio" = Just "Elpis"
-mother "Nick" = Just "Elpis"
+mother "Dio"    = Just "Elpis"
+mother "Nick"   = Just "Elpis"
 mother "George" = Just "Maria"
-mother "Elpis" = Just "Eftychia"
-mother _ = Nothing
+mother "Elpis"  = Just "Eftychia"
+mother _        = Nothing
 
 paternalGrandfather :: Person -> Maybe Person
 paternalGrandfather p = father p `monadBind` father
@@ -124,26 +140,25 @@ maternalGrandfather :: Person -> Maybe Person
 maternalGrandfather p = mother p `monadBind` father
 
 bothGrandfathers :: Person -> Maybe (Person, Person)
-bothGrandfathers p =
-  father p `monadBind`
-    (\dad -> father dad `monadBind`
-      (\gfdad -> mother p `monadBind`
-        (\mom -> father mom `monadBind`
-          (\gfmom -> monadReturn (gfdad, gfmom)))))
+bothGrandfathers p = father p    `monadBind` (\dad ->
+                     father dad  `monadBind` (\gfdad ->
+                     mother p    `monadBind` (\mom ->
+                     father mom  `monadBind` (\gfmom ->
+                     monadReturn (gfdad, gfmom)))))
 
 bothGrandmothers :: Person -> Maybe (Person, Person)
-bothGrandmothers p =
-  father p `monadBind`
-    (\dad -> mother dad `monadBind`
-      (\gmdad -> mother p `monadBind`
-        (\mom -> mother mom `monadBind`
-          (\gmmom -> monadReturn (gmdad, gmmom)))))
+bothGrandmothers p = father p    `monadBind` (\dad ->
+                     mother dad  `monadBind` (\gmdad ->
+                     mother p    `monadBind` (\mom ->
+                     mother mom  `monadBind` (\gmmom ->
+                     monadReturn (gmdad, gmmom)))))
 
 
 example50 = monadReturn (+) `monadAp` [10, 11, 12] `monadAp` [100, 200]
 example51 = monadReturn (+) `monadAp` Just 42 `monadAp` Just 100
 example52 = monadReturn (+) `monadAp` Nothing `monadAp` Just 100
 example53 = monadReturn (+) `monadAp` Just 42 `monadAp` Nothing
+
 
 example60 = emptySet []
 example61 = ((addToSet emptySet 1) 1)
@@ -156,23 +171,67 @@ example67 = setContains (singletonSet 1) 3
 example68 = (setUnion (singletonSet 1) (singletonSet 2)) 1
 example69 = (setUnion (singletonSet 1) (singletonSet 2)) 2
 example70 = (setUnion (singletonSet 1) (singletonSet 2)) 3
-example71 = (setIntersection (setUnion (singletonSet 1) (singletonSet 2)) (singletonSet 1)) 2
-example72 = (setIntersection (setUnion (singletonSet 1) (singletonSet 2)) (singletonSet 1)) 1
-example73 = (setDifference (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3))) 1
-example74 = (setDifference (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3))) 2
-example75 = (setDifference (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3))) 3
-example76 = (filterSet (== 2) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 3
-example77 = (filterSet (== 3) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 3
-example78 = (filterSet (>= 1) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 3
-example79 = (filterSet (>= 1) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 1
-example80 = (filterSet (>= 1) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 2
-example81 = (filterSet (>= 1) (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 10
-example82 = (removeFromSet 1 (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 1
-example83 = (removeFromSet 1 (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 2
-example84 = (removeFromSet 1 (setUnion (setUnion (singletonSet 1) (singletonSet 2)) (setUnion (singletonSet 1) (singletonSet 3)))) 3
+example71 = (setIntersection (setUnion (singletonSet 1) (singletonSet 2))
+                             (singletonSet 1)) 2
+example72 = (setIntersection (setUnion (singletonSet 1) (singletonSet 2))
+                             (singletonSet 1)) 1
+example73 = (setDifference (setUnion (singletonSet 1) (singletonSet 2))
+                           (setUnion (singletonSet 1) (singletonSet 3))) 1
+example74 = (setDifference (setUnion (singletonSet 1) (singletonSet 2))
+                           (setUnion (singletonSet 1) (singletonSet 3))) 2
+example75 = (setDifference (setUnion (singletonSet 1) (singletonSet 2))
+                           (setUnion (singletonSet 1) (singletonSet 3))) 3
+example76 = (filterSet (== 2)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 3
+example77 = (filterSet (== 3)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 3
+example78 = (filterSet (>= 1)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 3
+example79 = (filterSet (>= 1)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 1
+example80 = (filterSet (>= 1)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 2
+example81 = (filterSet (>= 1)
+                       (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                 (setUnion (singletonSet 1) (singletonSet 3)))) 10
+example82 = (removeFromSet 1
+                           (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                     (setUnion (singletonSet 1) (singletonSet 3)))) 1
+example83 = (removeFromSet 1
+                           (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                     (setUnion (singletonSet 1) (singletonSet 3)))) 2
+example84 = (removeFromSet 1
+                           (setUnion (setUnion (singletonSet 1) (singletonSet 2))
+                                     (setUnion (singletonSet 1) (singletonSet 3)))) 3
 example85 = map (toSet [1, 2, 3]) [0..4]
 example86 = setExists (toSet [1..3]) (== 1) [-100..100]
 example87 = setExists (toSet [1..3]) (== 0) [-100..100]
 example88 = setForAll (toSet [1..3]) (> 0) [-100..100]
 example89 = setForAll (toSet [1..3]) (> 0) [-100..100]
 example90 = setForAll (toSet [1..3]) (> 0) [1, 2]
+
+
+hello :: MyIOAction ()
+hello = put "Name?"                             `seqio` \_ ->
+        get                                     `seqio` \name ->
+        put "Age?"                              `seqio` \_ ->
+        get                                     `seqio` \age ->
+        put ("Hello " ++ name ++ "!")           `seqio` \_ ->
+        put ("You're " ++ age ++ " years old.")
+
+hello2 :: MyIOAction ()
+hello2 = do
+  put "Name?"
+  name <- get
+  put "Age?"
+  age <- get
+  put ("Hello " ++ name ++ "!")
+  put ("You're " ++ age ++ " years old.")
+
+example100 = run hello
+example101 = run hello2

@@ -7,8 +7,8 @@ module Config (
   goFaster,
   profile) where
 
--- http://www.haskellforall.com/2013/02/you-could-have-invented-comonads.html
 
+-- http://www.haskellforall.com/2013/02/you-could-have-invented-comonads.html
 
 type Option = String
 
@@ -61,7 +61,6 @@ MakeConfig ["-Wall","-prof","-auto-all","-O2"]
 -}
 
 extend :: (([Option] -> Config) -> Config) -> ([Option] -> Config) -> ([Option] -> Config)
-extend setter builder =
-  \opts2 ->
-    setter (\opts1 ->
-      builder (opts1 ++ opts2))
+extend setter builder =         \opts2 ->
+                        setter  (\opts1 ->
+                        builder (opts1 ++ opts2))

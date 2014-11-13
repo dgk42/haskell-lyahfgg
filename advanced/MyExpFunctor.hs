@@ -139,14 +139,14 @@ instance MyFunctor f => MyCata f (Nu f) where
 -- | Fegaras/Sheard
 data Rec f a = Roll (f (Rec f a)) | Place a
 cataFS :: MyExpFunctor f => (f a -> a) -> Rec f a -> a
-cataFS f (Roll x) = f (xMap (cataFS f) Place x)
+cataFS f (Roll x)  = f (xMap (cataFS f) Place x)
 cataFS f (Place x) = x
 
 instance Rollable f (Rec f a) where
   roll = Roll
 
 instance Unrollable f (Rec f a) where
-  unroll (Roll x) = x
+  unroll (Roll x)  = x
   unroll (Place x) = undefined
 
 

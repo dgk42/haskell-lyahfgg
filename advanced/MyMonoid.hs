@@ -86,8 +86,8 @@ instance (MyMonoid a, MyMonoid b) => MyMonoid (a, b) where
 -- use 'Monoid' instead.
 instance MyMonoid a => MyMonoid (Maybe a) where
   monoidEmpty = Nothing
-  Nothing `monoidAppend` x = x
-  x `monoidAppend` Nothing = x
+  Nothing `monoidAppend` x     = x
+  x `monoidAppend` Nothing     = x
   Just x `monoidAppend` Just y = Just (monoidAppend x y)
 
 
@@ -97,7 +97,7 @@ newtype MonoidFirst a = MonoidFirst { getMonoidFirst :: Maybe a } deriving (Show
 instance MyMonoid (MonoidFirst a) where
   monoidEmpty = MonoidFirst Nothing
   r@(MonoidFirst (Just _)) `monoidAppend` _ = r
-  MonoidFirst Nothing `monoidAppend` r = r
+  MonoidFirst Nothing `monoidAppend` r      = r
 
 
 -- | Maybe monoid returning the rightmost non-Nothing value.
@@ -106,7 +106,7 @@ newtype MonoidLast a = MonoidLast { getMonoidLast :: Maybe a } deriving (Show, R
 instance MyMonoid (MonoidLast a) where
   monoidEmpty = MonoidLast Nothing
   _ `monoidAppend` r@(MonoidLast (Just _)) = r
-  r `monoidAppend` MonoidLast Nothing = r
+  r `monoidAppend` MonoidLast Nothing      = r
 
 
 -- | The Dual Monoid (obtained by swapping the arguments of <>).
@@ -159,8 +159,7 @@ instance Num a => MyMonoid (MonoidProd a) where
 
 -- | Monoid under min.
 data Smallest a = Smallest a
-                | PlusInfinity
-                deriving (Show, Read, Eq, Ord)
+                | PlusInfinity deriving (Show, Read, Eq, Ord)
 
 instance Ord a => MyMonoid (Smallest a) where
   monoidEmpty = PlusInfinity
@@ -169,8 +168,7 @@ instance Ord a => MyMonoid (Smallest a) where
 
 -- | Monoid under max.
 data Largest a = MinusInfinity
-               | Largest a
-               deriving (Show, Read, Eq, Ord)
+               | Largest a deriving (Show, Read, Eq, Ord)
 
 instance Ord a => MyMonoid (Largest a) where
   monoidEmpty = MinusInfinity

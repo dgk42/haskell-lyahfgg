@@ -24,7 +24,7 @@ instance MyFunctor [] where
 
 
 instance MyFunctor Maybe where
-  funMap f Nothing = Nothing
+  funMap f Nothing  = Nothing
   funMap f (Just x) = Just (f x)
 
 
