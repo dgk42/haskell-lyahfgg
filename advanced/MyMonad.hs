@@ -68,6 +68,10 @@ class (MyApplicativeFunctor m) => MyMonad m where
   monadThen :: m a -> m b -> m b
   x `monadThen` y = x `monadBind` \_ -> y
 
+  --pure = monadReturn
+  --fs `apply` xs = fs `monadBind` (\f -> xs `monadBind` (\x -> monadReturn (f x)))
+  --funMap f fa = fa `monadBind` monadReturn . f
+
 
 instance MyMonad Maybe where
   monadReturn x = Just x

@@ -58,6 +58,8 @@ class (MyFunctor f) => MyApplicativeFunctor f where
   -- <*>
   apply :: f (a -> b) -> f a -> f b
 
+  --funMap f fa = pure f apply fa
+
 
 instance MyApplicativeFunctor [] where
   pure x = [x]
