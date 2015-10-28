@@ -37,5 +37,5 @@ instance MyMonad Tree1 where
 instance MyApplicativeFunctor Tree1 where
   pure = monadReturn
   tf `apply` tx = tf          `monadBind` (\f ->
-  	          tx          `monadBind` (\x ->
-  	          monadReturn (f x)))
+                  tx          `monadBind` (\x ->
+                  monadReturn (f x)))
